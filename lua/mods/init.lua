@@ -12,6 +12,9 @@ local M = {}
 ---@field prompt mods.Prompt
 ---@field loading boolean
 
+---@class mods.Options
+---@field prompts mods.Prompt[]
+
 ---@type mods.Prompt[]
 local prompts = {
     {
@@ -34,8 +37,11 @@ local state = {
     loading = false,
 }
 
+---@param opts mods.Options
 M.setup = function(opts)
     opts = opts or {}
+    opts.prompts = opts.prompts or {}
+    vim.list_extend(prompts, opts.prompts)
 end
 
 ---@param buf number: The buffer to set the content
@@ -219,9 +225,18 @@ M.query = function(opts)
 end
 
 -- testing
+-- M.setup({
+--     prompts = {
+--         {
+--             name = "Caveman",
+--             prompt = "Explain the following code snippet to a caveman",
+--         },
+--     },
+-- })
 -- M.query()
-
+--
 -- vim.keymap.set("v", "<leader>aa", function()
 --     M.query()
 -- end)
+
 return M
