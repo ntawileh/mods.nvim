@@ -16,16 +16,7 @@ local M = {}
 ---@field prompts mods.Prompt[]
 
 ---@type mods.Prompt[]
-local prompts = {
-    {
-        name = "Explain",
-        prompt = "Explain the following code snippet",
-    },
-    {
-        name = "Summarize",
-        prompt = "Summarize the following code snippet",
-    },
-}
+local prompts = require("mods.prompts").prompts
 
 ---@type mods.State
 local state = {
