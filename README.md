@@ -74,7 +74,7 @@ require("mods").setup({
 
 ## Credits
 
-Have to credit [teej_dv](https://github.com/teej_dv) for the great Advent of
+Have to credit [tjdevries](https://github.com/tjdevries) for the great Advent of
 Neovim videos, which taught me lua and Neovim plugin development.
 
 Also, thanks to the creators of [mods](https://github.com/charmbracelet/mods)
