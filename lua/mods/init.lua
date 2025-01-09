@@ -168,32 +168,62 @@ local function get_visual_selection()
     return lines
 end
 
+---@class mods.QueryOptions
+---@field bufnr number|nil: The buffer to query on.  Defaults to current buffer
+---@field exclude_context boolean|nil: If true, no content from the buffer will be passed in the prompt
+
+---@param opts mods.QueryOptions
 M.query = function(opts)
     opts = opts or {}
     opts.bufnr = opts.bufnr or 0
+    opts.exclude_context = opts.exclude_context or false
     local mode = vim.api.nvim_get_mode().mode
     local lines = {}
+    local select_options = {}
     reset_state()
 
-    if mode == "v" or mode == "V" then
-        -- vim.fn.feedkeys(":", "nx")
-        -- vim.api.nvim_input("<Esc>")
-        vim.fn.feedkeys(mode, "nx")
-        -- vim.api.nvim_input("")
-        lines = get_visual_selection()
-    else
-        lines = vim.api.nvim_buf_get_lines(opts.bufnr, 0, -1, false)
+    local custom_query = function()
+        vim.ui.input({
+            prompt = "Enter the prompt to use for the code selection",
+            enabled = true,
+        }, function(value)
+            if not value or value == "" then
+                return
+            end
+            state.prompt = {
+                name = "custom",
+                prompt = value,
+            }
+            execute_mods()
+        end)
     end
 
-    local select_options = {}
-    vim.list_extend(select_options, prompts)
-    table.insert(select_options, {
-        prompt = "__custom",
-        name = "Type my own",
-    })
+    if not opts.exclude_context then
+        if mode == "v" or mode == "V" then
+            -- vim.fn.feedkeys(":", "nx")
+            -- vim.api.nvim_input("<Esc>")
+            vim.fn.feedkeys(mode, "nx")
+            -- vim.api.nvim_input("")
+            lines = get_visual_selection()
+        else
+            lines = vim.api.nvim_buf_get_lines(opts.bufnr, 0, -1, false)
+        end
+
+        vim.list_extend(select_options, prompts)
+        table.insert(select_options, {
+            prompt = "__custom",
+            name = "Type my own",
+        })
+    end
 
     state.file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(opts.bufnr), ":p")
     state.context = lines
+
+    if opts.exclude_context then
+        custom_query()
+        return
+    end
+
     vim.ui.select(select_options, {
         prompt = "Select prompt: ",
         format_item = function(p)
@@ -204,19 +234,7 @@ M.query = function(opts)
             return
         end
         if selection.prompt == "__custom" then
-            vim.ui.input({
-                prompt = "Enter the prompt to use for the code selection",
-                enabled = true,
-            }, function(value)
-                if not value or value == "" then
-                    return
-                end
-                state.prompt = {
-                    name = "custom",
-                    prompt = value,
-                }
-                execute_mods()
-            end)
+            custom_query()
             return
         end
         state.prompt = selection
@@ -233,6 +251,7 @@ end
 --         },
 --     },
 -- })
+-- M.query({ exclude_context = true })
 -- M.query()
 --
 -- vim.keymap.set("v", "<leader>aa", function()
