@@ -12,6 +12,7 @@ local M = {}
 ---@field response string[]
 ---@field prompt mods.Prompt
 ---@field loading boolean
+---@field mods_command string[]
 
 ---@class mods.Options
 ---@field prompts mods.Prompt[]
@@ -27,6 +28,7 @@ local state = {
     response = {},
     prompt = prompts[1],
     loading = false,
+    mods_command = {},
 }
 
 ---@param opts mods.Options
@@ -69,6 +71,7 @@ local reset_state = function()
         prompt = prompts[1],
         window = {},
         loading = false,
+        mods_command = {},
     }
 end
 
@@ -96,6 +99,11 @@ local function make_prompt_content()
     table.insert(lines, "```")
     vim.list_extend(lines, state.context)
     table.insert(lines, "```")
+
+    table.insert(lines, "")
+    table.insert(lines, "# Mods Command")
+    vim.list_extend(lines, state.mods_command)
+    table.insert(lines, "")
     return lines
 end
 
@@ -161,6 +169,15 @@ local function execute_mods(opts)
     local on_exit = function(obj)
         vim.schedule(function()
             state.loading = false
+
+            if obj.code ~= 0 then
+                vim.notify("mods exited with code " .. obj.code .. ": " .. obj.stderr, vim.log.levels.ERROR)
+                if state.window:win_valid() then
+                    state.window:close()
+                end
+                return
+            end
+
             if not state.window:win_valid() then
                 return
             end
@@ -171,6 +188,7 @@ local function execute_mods(opts)
             setup_keymaps()
         end)
     end
+    state.mods_command = command
     vim.system(command, { text = true, stdin = opts.context }, on_exit)
     state.loading = true
 end
