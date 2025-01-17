@@ -145,7 +145,7 @@ local function execute_mods(opts)
         vim.list_extend(command, { "--role", opts.prompt.role })
     end
 
-    table.insert(command, opts.prompt.role)
+    table.insert(command, opts.prompt.prompt)
     local output = {
         "## Asking AI, please wait...",
         "```",
