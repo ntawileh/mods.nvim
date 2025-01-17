@@ -3,6 +3,7 @@ local M = {}
 ---@class mods.Prompt
 ---@field name string
 ---@field prompt string
+---@field role string | nil
 
 ---@class mods.State
 ---@field file_name string
@@ -83,6 +84,13 @@ local function make_prompt_content()
     table.insert(lines, "# Prompt")
     vim.list_extend(lines, prompt)
     table.insert(lines, "")
+
+    if state.prompt.role then
+        table.insert(lines, "# Mods Role")
+        table.insert(lines, state.prompt.role)
+        table.insert(lines, "")
+    end
+
     table.insert(lines, "# Context")
     table.insert(lines, "")
     table.insert(lines, "```")
@@ -131,7 +139,13 @@ local function execute_mods(opts)
     end
     opts.context = opts.context or {}
     local win = require("mods.win")
-    local command = { "mods", "-f", "-c", "nvim:mods " .. state.file_name, opts.prompt.prompt }
+    local command = { "mods", "-f", "-c", "nvim:mods " .. state.file_name }
+
+    if opts.prompt.role then
+        vim.list_extend(command, { "--role", opts.prompt.role })
+    end
+
+    table.insert(command, opts.prompt.role)
     local output = {
         "## Asking AI, please wait...",
         "```",
