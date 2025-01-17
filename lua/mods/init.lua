@@ -35,12 +35,27 @@ M.setup = function(opts)
     vim.list_extend(prompts, opts.prompts)
 end
 
+---Sanitize lines for rendering.
+---Replace newlines with literal \n
+---@private
+---@param lines string[]
+---@return string[]
+local function sanitize_lines(lines)
+    return vim.tbl_map(
+        ---@param line string
+        function(line)
+            return line and line:gsub("\n", "\\n") or ""
+        end,
+        lines
+    )
+end
+
 ---@param buf number: The buffer to set the content
 ---@param lines string[]: The lines to set
 local function set_window_content(buf, lines)
     vim.bo[buf].modifiable = true
     vim.bo[buf].readonly = false
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, sanitize_lines(lines))
     vim.bo[buf].modifiable = false
     vim.bo[buf].readonly = true
 end
@@ -64,8 +79,9 @@ end
 
 local function make_prompt_content()
     local lines = {}
+    local prompt = vim.split(state.prompt.prompt, "\n")
     table.insert(lines, "# Prompt")
-    table.insert(lines, state.prompt.prompt)
+    vim.list_extend(lines, prompt)
     table.insert(lines, "")
     table.insert(lines, "# Context")
     table.insert(lines, "")
