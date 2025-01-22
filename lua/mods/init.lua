@@ -281,6 +281,33 @@ M.query = function(opts)
     end)
 end
 
+---@class mods.HistoryOptions
+---@field bufnr number|nil: The buffer to query on.  Defaults to current buffer
+
+---@param opts mods.HistoryOptions | nil
+M.get_history = function(opts)
+    opts = opts or {}
+    opts.bufnr = opts.bufnr or 0
+
+    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(opts.bufnr), ":p")
+
+    local command = { "mods", "--show", "nvim:mods " .. file_name }
+    local history_command = vim.system(command, { text = true }):wait()
+    if history_command.code ~= 0 then
+        vim.notify(
+            "mods exited with code " .. history_command.code .. ": " .. history_command.stderr,
+            vim.log.levels.ERROR
+        )
+        return
+    end
+
+    require("mods.win").create_floating_window({
+        text = history_command.stdout,
+        title = "mods history for " .. file_name,
+        footer = "(q) close",
+    })
+end
+
 -- testing
 -- M.setup({
 --     prompts = {
@@ -292,6 +319,7 @@ end
 -- })
 -- M.query({ exclude_context = true })
 -- M.query()
+-- M.get_history()
 --
 -- vim.keymap.set("v", "<leader>aa", function()
 --     M.query()
