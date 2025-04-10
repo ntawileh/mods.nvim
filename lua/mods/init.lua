@@ -147,7 +147,7 @@ local function execute_mods(opts)
     end
     opts.context = opts.context or {}
     local win = require("mods.win")
-    local command = { "mods", "-f", "-c", "nvim:mods " .. state.file_name }
+    local command = { "mods", "-f", "-t", "nvim:mods " .. state.file_name }
 
     if opts.prompt.role then
         vim.list_extend(command, { "--role", opts.prompt.role })
