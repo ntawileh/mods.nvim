@@ -59,10 +59,13 @@ vim.keymap.set({ "v", "n" }, "<leader>aa", function()
 
 You can call the `setup` function to add more prompts. By default, the plugin
 includes the prompts to _Explain_ and _Summarize_ the code/selection
+You can also set the model to use.  This model has to be defined in your
+`mods.yml`.  If you don't set a model, the default one will be used.
 
 ```lua
 
 require("mods").setup({
+  model = "gpt-4",
   prompts = {
          {
              name = "Caveman Explanation",
