@@ -16,9 +16,13 @@ local M = {}
 
 ---@class mods.Options
 ---@field prompts mods.Prompt[]
+---@field model string | nil
 
 ---@type mods.Prompt[]
 local prompts = require("mods.prompts").prompts
+
+---@type string | nil
+local model = nil
 
 ---@type mods.State
 local state = {
@@ -35,6 +39,8 @@ local state = {
 M.setup = function(opts)
     opts = opts or {}
     opts.prompts = opts.prompts or {}
+    opts.model = opts.model or nil
+    model = opts.model
     vim.list_extend(prompts, opts.prompts)
 end
 
@@ -153,6 +159,10 @@ local function execute_mods(opts)
         vim.list_extend(command, { "--role", opts.prompt.role })
     end
 
+    if model then
+        vim.list_extend(command, { "--model", model })
+    end
+
     table.insert(command, opts.prompt.prompt)
     local output = {
         "## Asking AI, please wait...",
@@ -195,6 +205,7 @@ end
 
 local function get_visual_selection()
     ---@type {[number]: {startcol:integer, endcol:integer}}
+    ---@diagnostic disable-next-line: deprecated
     local region = vim.region(0, "'<", "'>", vim.fn.visualmode(), true)
     ---@type string[]
     local lines = {}
