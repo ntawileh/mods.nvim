@@ -23,6 +23,7 @@ M.create_floating_window = function(opts)
         },
         wo = {
             wrap = true,
+            spell = false,
         },
         text = opts.text,
         title = opts.title or "",
