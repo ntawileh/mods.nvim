@@ -10,6 +10,7 @@ local M = {}
 ---@field window snacks.win | {}
 ---@field context string[]
 ---@field response string[]
+---@field raw_response string
 ---@field prompt mods.Prompt
 ---@field loading boolean
 ---@field mods_command string[]
@@ -30,6 +31,7 @@ local state = {
     window = {},
     context = {},
     response = {},
+    raw_response = "",
     prompt = prompts[1],
     loading = false,
     mods_command = {},
@@ -74,6 +76,7 @@ local reset_state = function()
         file_name = "",
         context = {},
         response = {},
+        raw_response = "",
         prompt = prompts[1],
         window = {},
         loading = false,
@@ -191,15 +194,36 @@ local function execute_mods(opts)
             if not state.window:win_valid() then
                 return
             end
-            state.response = vim.split(obj.stdout, "\n")
-            set_window_content(state.window.buf, state.response)
+            if obj.stdout then
+                state.response = vim.split(obj.stdout, "\n")
+                set_window_content(state.window.buf, state.response)
+            end
             state.window.opts.footer = "(p) show prompt, (Y) yank, (q) close"
             state.window:update()
             setup_keymaps()
         end)
     end
+
+    local on_stdout = function(err, data)
+        vim.schedule(function()
+            if not state.window:win_valid() then
+                return
+            end
+            if data then
+                state.raw_response = state.raw_response .. data
+                state.response = vim.split(state.raw_response, "\n")
+                set_window_content(state.window.buf, state.response)
+                state.window:scroll()
+            end
+        end)
+    end
+
     state.mods_command = command
-    vim.system(command, { text = true, stdin = opts.context }, on_exit)
+    vim.system(command, {
+        text = true,
+        stdin = opts.context,
+        stdout = on_stdout,
+    }, on_exit)
     state.loading = true
 end
 
