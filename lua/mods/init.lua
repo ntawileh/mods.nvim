@@ -125,6 +125,7 @@ local function setup_keymaps()
             state.window.opts.footer = "(r) show response, (q) close"
             state.window:update()
             set_window_content(state.window.buf, make_prompt_content())
+            state.window:scroll(true)
         end)
     end)
 
@@ -204,9 +205,9 @@ local function execute_mods(opts)
         end)
     end
 
-    local on_stdout = function(err, data)
+    local on_stdout = function(_err, data)
         vim.schedule(function()
-            if not state.window:win_valid() then
+            if not state.window or not state.window:win_valid() then
                 return
             end
             if data then
