@@ -6,8 +6,7 @@ this plugin might be interesting to you. It is simply a way to call mods
 from within Neovim and get some quick actions like highlighting code in
 the editor and asking AI a question about it.
 
-![](images/demo1.gif)
-
+![mods demo](images/demo1.gif)
 
 ## Installation
 
@@ -61,8 +60,9 @@ vim.keymap.set({ "v", "n" }, "<leader>aa", function()
 ## Configuration
 
 You can call the `setup` function to add more prompts. By default, the plugin
-includes the prompts to _Explain_, _Code Review_, _Optimize_, and _Summarize_ the code/selection. You can find details on all the included prompts [here](lua/mods/prompts.lua).
-
+includes the prompts to _Explain_, _Code Review_, _Optimize_, and _Summarize_
+the code/selection. You can find details on all the included prompts  
+[here](lua/mods/prompts.lua).
 
 You can also set the model to use.  This model has to be defined in your
 `mods.yml`.  If you don't set a model, the default one will be used.
