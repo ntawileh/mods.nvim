@@ -71,6 +71,41 @@ local function set_window_content(buf, lines)
     vim.bo[buf].readonly = true
 end
 
+---@param bufnr number: The buffer to set the content
+---@param text string: The text to set as the last line
+local function replace_last_line(bufnr, text)
+    -- Get the number of lines in the buffer (API is zero-indexed)
+    local line_count = vim.api.nvim_buf_line_count(bufnr)
+    if line_count == 0 then
+        -- Buffer is empty, just set the first/only line to text
+        vim.api.nvim_buf_set_lines(bufnr, 0, 0, false, { text })
+    else
+        -- Replace the last line
+        -- (start is last line index, end is one past last line)
+        vim.api.nvim_buf_set_lines(bufnr, line_count - 1, line_count, false, { text })
+    end
+end
+
+---@param bufnr number: Buffer number.
+---@param text string | table: Text to append. If string, it will be split by lines. If table, each item is a line.
+local function append_to_buffer(bufnr, text)
+    -- Get the current line count
+    local line_count = vim.api.nvim_buf_line_count(bufnr)
+    local lines = {}
+    if type(text) == "string" then
+        -- Split text into lines by '\n'
+        for s in text:gmatch("[^\r\n]+") do
+            table.insert(lines, s)
+        end
+    elseif type(text) == "table" then
+        lines = text
+    else
+        error("text must be a string or a table of lines")
+    end
+    -- Append lines after the last line (line_count)
+    vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, lines)
+end
+
 local reset_state = function()
     state = {
         file_name = "",
@@ -150,6 +185,26 @@ local function setup_keymaps()
         end)
     end)
 end
+
+local function stream_text(text)
+    local lines = vim.split(text, "\n")
+    local current_last_line = vim.api.nvim_buf_get_lines(state.window.buf, -2, -1, false)[1]
+
+    vim.bo[state.window.buf].modifiable = true
+    vim.bo[state.window.buf].readonly = false
+    for i, line in ipairs(lines) do
+        if i == 1 then
+            replace_last_line(state.window.buf, current_last_line .. line)
+        else
+            append_to_buffer(state.window.buf, { line })
+        end
+    end
+    vim.bo[state.window.buf].modifiable = false
+    vim.bo[state.window.buf].readonly = true
+
+    state.window:scroll()
+end
+
 local function execute_mods(opts)
     opts = opts or { prompt = state.prompt, context = state.context }
     if not opts.prompt then
@@ -174,7 +229,7 @@ local function execute_mods(opts)
         "",
     }
     vim.list_extend(output, opts.context)
-    table.insert(output, "```")
+    vim.list_extend(output, { "```", "" })
 
     state.window = win.create_floating_window({
         text = output,
@@ -211,10 +266,12 @@ local function execute_mods(opts)
                 return
             end
             if data then
+                if state.raw_response == "" then
+                    set_window_content(state.window.buf, { "" })
+                end
                 state.raw_response = state.raw_response .. data
                 state.response = vim.split(state.raw_response, "\n")
-                set_window_content(state.window.buf, state.response)
-                state.window:scroll()
+                stream_text(data)
             end
         end)
     end
