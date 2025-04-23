@@ -7,7 +7,7 @@ M.create_floating_window = function(opts)
     return Snacks.win({
         show = true,
         enter = true,
-        position = "float",
+        position = opts.position or "float",
         col = opts.col,
         row = opts.row,
         backdrop = 35,
@@ -17,7 +17,7 @@ M.create_floating_window = function(opts)
         border = opts.border or "double",
         ft = "markdown",
         footer = opts.footer or "",
-        bo = {
+        bo = opts.bo or {
             filetype = "markdown",
             modifiable = false,
         },
