@@ -15,6 +15,7 @@ the editor and asking AI a question about it.
 ```lua
 {
     'ntawileh/mods.nvim'
+    dependencies = { "folke/snacks.nvim" },
 }
 ```
 
