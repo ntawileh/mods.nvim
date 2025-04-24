@@ -164,12 +164,22 @@ local function setup_keymaps()
         end)
     end)
 
+    mods_keymap("n", "c", function()
+        vim.schedule(function()
+            if state.loading then
+                return
+            end
+            state.window:close()
+            M.query({ continue = true, exclude_context = true })
+        end)
+    end)
+
     mods_keymap("n", "r", function()
         vim.schedule(function()
             if state.loading then
                 return
             end
-            state.window.opts.footer = "(p) show prompt, (Y) yank response, (q) close"
+            state.window.opts.footer = "(p) show prompt, (Y) yank response, (c) continue conversation,  (q) close"
             state.window:update()
             set_window_content(state.window.buf, state.response)
         end)
@@ -206,13 +216,14 @@ local function stream_text(text)
 end
 
 local function execute_mods(opts)
-    opts = opts or { prompt = state.prompt, context = state.context }
+    opts = opts or { prompt = state.prompt, context = state.context, continue = false }
     if not opts.prompt then
         return
     end
     opts.context = opts.context or {}
+    opts.continue = opts.continue or false
     local win = require("mods.win")
-    local command = { "mods", "-f", "-t", "nvim:mods " .. state.file_name }
+    local command = { "mods", "-f", opts.continue and "-c" or "-t", "nvim:mods " .. state.file_name }
 
     if opts.prompt.role then
         vim.list_extend(command, { "--role", opts.prompt.role })
@@ -254,7 +265,7 @@ local function execute_mods(opts)
                 state.response = vim.split(obj.stdout, "\n")
                 set_window_content(state.window.buf, state.response)
             end
-            state.window.opts.footer = "(p) show prompt, (Y) yank, (q) close"
+            state.window.opts.footer = "(p) show prompt, (Y) yank response, (c) continue conversation,  (q) close"
             state.window:update()
             setup_keymaps()
         end)
@@ -303,12 +314,14 @@ end
 ---@class mods.QueryOptions
 ---@field bufnr number|nil: The buffer to query on.  Defaults to current buffer
 ---@field exclude_context boolean|nil: If true, no content from the buffer will be passed in the prompt
+---@field continue boolean|nil: If true, continue the last conversation for this file
 
 ---@param opts mods.QueryOptions
 M.query = function(opts)
     opts = opts or {}
     opts.bufnr = opts.bufnr or 0
     opts.exclude_context = opts.exclude_context or false
+    opts.continue = opts.continue or false
     local mode = vim.api.nvim_get_mode().mode
     local lines = {}
     local select_options = {}
@@ -346,7 +359,7 @@ M.query = function(opts)
                         prompt = table.concat(prompt_lines, "\n"),
                     }
                     self:close()
-                    execute_mods()
+                    execute_mods({ continue = opts.continue, context = state.context, prompt = state.prompt })
                 end,
                 q = "close",
             },
@@ -420,7 +433,16 @@ M.get_history = function(opts)
     require("mods.win").create_floating_window({
         text = history_command.stdout,
         title = "mods history for " .. file_name,
-        footer = "(q) close",
+        footer = "(q) close, (c) continue conversation",
+        keys = {
+            c = function(self)
+                self:close()
+                vim.schedule(function()
+                    M.query({ continue = true, exclude_context = true })
+                end)
+            end,
+            q = "close",
+        },
     })
 end
 
@@ -433,7 +455,7 @@ end
 --         },
 --     },
 -- })
--- M.query({ exclude_context = true })
+-- M.query({ exclude_context = true, continue = true })
 -- M.query()
 -- M.get_history()
 --

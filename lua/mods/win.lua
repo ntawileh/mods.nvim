@@ -32,6 +32,8 @@ M.create_floating_window = function(opts)
         fixbuf = true,
         keys = opts.keys or {},
         actions = opts.actions or {},
+        on_buf = opts.on_buf or nil,
+        on_win = opts.on_win or nil,
     })
 end
 
