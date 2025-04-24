@@ -34,6 +34,6 @@ M.check = function()
     health.ok("mods.nvim setup is ok")
 end
 
-M.check()
+--M.check()
 
 return M
