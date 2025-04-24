@@ -8,7 +8,6 @@ local M = {}
 ---@class mods.State
 ---@field file_name string
 ---@field window snacks.win | {}
----@field prompt_window snacks.win | {}
 ---@field context string[]
 ---@field response string[]
 ---@field raw_response string
@@ -30,7 +29,6 @@ local model = nil
 local state = {
     file_name = "",
     window = {},
-    prompt_window = {},
     context = {},
     response = {},
     raw_response = "",
@@ -116,7 +114,6 @@ local reset_state = function()
         raw_response = "",
         prompt = prompts[1],
         window = {},
-        prompt_window = {},
         loading = false,
         mods_command = {},
     }
@@ -319,13 +316,15 @@ M.query = function(opts)
 
     local custom_query = function()
         local win = require("mods.win")
-        state.prompt_window = win.create_floating_window({
+        win.create_floating_window({
             text = "",
             footer = "(q) close/cancel, (s) submit",
             title = "Enter your prompt",
             bo = {
                 filetype = "markdown",
                 modifiable = true,
+                swapfile = false,
+                bufhidden = "hide",
             },
             wo = {
                 wrap = true,
@@ -333,8 +332,8 @@ M.query = function(opts)
                 spell = true,
             },
             keys = {
-                s = function()
-                    local prompt_lines = vim.api.nvim_buf_get_lines(state.prompt_window.buf, 0, -1, false)
+                s = function(self)
+                    local prompt_lines = vim.api.nvim_buf_get_lines(self.buf, 0, -1, false)
                     if #prompt_lines == 0 or prompt_lines[1] == "" then
                         vim.notify("prompt is empty.  if you want to cancel, press q", vim.log.levels.WARN)
                         return
@@ -343,7 +342,7 @@ M.query = function(opts)
                         name = "custom",
                         prompt = table.concat(prompt_lines, "\n"),
                     }
-                    state.prompt_window:close()
+                    self:close()
                     execute_mods()
                 end,
                 q = "close",
