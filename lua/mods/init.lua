@@ -331,6 +331,9 @@ M.query = function(opts)
                 modifiable = true,
                 spell = true,
             },
+            on_buf = function()
+                vim.cmd("startinsert!")
+            end,
             keys = {
                 s = function(self)
                     local prompt_lines = vim.api.nvim_buf_get_lines(self.buf, 0, -1, false)
