@@ -21,13 +21,17 @@ the editor and asking AI a question about it.
 
 ## Usage
 
+### Query
 ```lua
 require("mods").query({
     -- optional, defaults to current buffer
     bufnr = 0,
-    -- optional, defaults to false. if true,
+    -- optional, defaults to false. If true,
     -- no content from the buffer will be passed in the prompt
     exclude_context = false,
+    -- optional, defaults to false. If true,
+    -- will continue previous conversation if it exists
+    continue = false,
 })
 ```
 
@@ -37,25 +41,50 @@ In Normal mode, the entire buffer will be passed in as context
 (unless you set `exclude_context` to true).
 In Visual mode, only the selected text will be passed in as context.
 
+If you set `continue` to true, the plugin will try to continue the previous
+conversation with that file if it exists.
+
+
+### Open Conversation
+```lua
+require("mods").get_history()
+```
+
+This will open a floating window with the conversation history for the current file.
+
+
 ### Keymaps
 
 My keymaps to use this plugin are:
 
 ```lua
 
-vim.keymap.set({ "v", "n" }, "<leader>aa", function()
+vim.keymap.set({ "v" }, "<leader>aa", function()
     require("mods").query({})
-    end, {
-      desc = "Query Mods AI with selection/buffer as context",
-    })
+end, {
+    desc = "Query Mods AI with selection as context",
+})
 
-    vim.keymap.set({ "n" }, "<leader>aq", function()
-        require("mods").query({
-          exclude_context = true,
-       })
-       end, {
-        desc = "Query Mods AI without context",
-       })
+vim.keymap.set({ "n" }, "<leader>aa", function()
+    require("mods").query({})
+end, {
+    desc = "Query Mods AI with current buffer as context",
+})
+
+vim.keymap.set({ "n" }, "<leader>aq", function()
+    require("mods").query({
+        exclude_context = true,
+    })
+end, {
+    desc = "Query Mods AI without any buffer context",
+})
+
+vim.keymap.set({ "n" }, "<leader>ac", function()
+    require("mods").get_history()
+end, {
+    desc = "View AI recent conversation for this file",
+})
+
 ```
 
 ## Configuration
